@@ -31,9 +31,8 @@ export default Ember.Component.extend({
 
     if (!window.DISQUS) {
       loadDisqusApi(this, 'embed');
-    } else {
-      this.reset();
     }
+    this.reset();
   }),
 
   /**
@@ -48,21 +47,24 @@ export default Ember.Component.extend({
   */
 
   reset: function(identifier, title, disqus_url) {
-    Ember.run.debounce(this, function() {
+    Ember.run.debounce(this, ()=> {
       identifier = defaultFor(identifier, this.get('identifier'));
       disqus_url = defaultFor(disqus_url, this.get('disqusUrl'));
       title = defaultFor(title, this.get('title'));
 
       /** @ref https://help.disqus.com/customer/portal/articles/472107-using-disqus-on-ajax-sites */
-
-      window.DISQUS.reset({
-        reload: true,
-        config: function () {
-          this.page.identifier = !disqus_url && identifier || undefined;
-          this.page.url = disqus_url || window.location.href;
-          this.page.title = title || undefined;
-        }
-      });
+      if(window.DISQUS && window.DISQUS.reset){
+        window.DISQUS.reset({
+          reload: true,
+          config: function () {
+            this.page.identifier = identifier || undefined;
+            this.page.url = disqus_url || window.location.href;
+            this.page.title = title || undefined;
+          }
+        });
+      } else {
+        Ember.run.later(this, this.reset, 100)
+      }
     }, 100);
   },
 
@@ -91,5 +93,3 @@ export default Ember.Component.extend({
   }),
 
 });
-
-
